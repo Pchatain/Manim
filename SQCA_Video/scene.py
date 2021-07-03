@@ -1,4 +1,4 @@
-from typing import Text
+from typing import Text, get_origin
 from manim import *
 
 # TODO: define quanta in a class
@@ -74,9 +74,7 @@ class classical_circuit(Scene):
  
 
 class wire_classical(Scene):
-  def construct(self):
-
-    
+  def construct(self):    
     d1 = Dot([-4, 0, 0])
     d2 = Dot([-4, -1, 0])
     d1_moved = Dot([4, 0, 0])
@@ -125,6 +123,7 @@ class QubitReal(VGroup):
         arrow.move_to(center + [magnitude_0/4, magnitude_1/4, 0])
         self.add(zero.move_to(center + RIGHT * 4/5))
         self.add(one.move_to(center + LEFT * 4/5))
+
     def clear_arrow(self):
         self.remove(self.arrow)
         self.arrow = None
@@ -140,17 +139,52 @@ class QubitReal(VGroup):
 class quantum_bit(Scene):
   def construct(self):
 
-    d1 = Dot([-4, -0.5, 0])
+    d1 = Dot([-4, 0, 0])
     d2 = Dot([-4, -1, 0])
 
-    q1 = QubitReal(0).move_to([-4, 0.5, 0])
+    q1 = QubitReal(0).move_to([-4, 1, 0])
     q1 += d1
-    q_new = QubitReal(1).move_to([-4, 0.5, 0])
+    q_new = QubitReal(1).move_to([-4, 1, 0])
     self.add(q1)
     self.play(Transform(q1 - d1, q_new))
     
     self.wait()
 
+class hadamard(Scene):
+  def construct(self):
+    line1 = Line([-4, 0, 0], [4, 0, 0])
+    line2 = Line([-4, -2, 0], [4, -2, 0])
+    # self.add(line1, line2)
+    outline = Square(1).set_fill(BLACK, opacity=1.0)
+    label = Text("H").scale(1.5).move_to(outline.get_center())
+    h_gate = VGroup(outline, label).move_to([0,1,0])
+    self.play(Write(h_gate))
+    self.add_foreground_mobjects(h_gate)
+    self.wait()
+
+    d1 = Dot([-4, 0, 0])
+    d2 = Dot([-4, -2, 0])
+    q1_loc = [-4, 0.75, 0]
+    q2_loc = [-4, -1.25, 0]
+    q1 = QubitReal(0).move_to(q1_loc)
+    q1 += d1
+    q2 = QubitReal(1).move_to(q2_loc)
+    q2 += d2
+
+    self.play(Write(line1), Write(line2), h_gate.animate.move_to([-2,0,0]))
+    self.play(Write(q1), Write(q2))
+    self.wait(1)
+
+    self.play(q2.animate.shift(RIGHT * 2), q1.animate.shift(RIGHT * 2))
+    self.wait(1)
+    q1_new = QubitReal(0.5).move_to(q1_loc + RIGHT * 2) + d1
+
+    self.play(Transform(q1, q1_new), run_time=0.5)
+
+    self.play(q1.animate.shift(RIGHT * 6), q2.animate.shift(RIGHT * 6))
+
+    self.wait(2)
+    self.wait()
 
 class image_test(Scene):
   def construct(self):
