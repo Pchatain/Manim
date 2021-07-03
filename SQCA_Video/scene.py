@@ -135,24 +135,36 @@ def bit(dot, n1, n2):
   grp.add(Arrow(n1, n2))
   return grp
 
-class CircleWithContent(VGroup):
-    def __init__(self, content):
+class QubitReal(VGroup):
+    def __init__(self, magnitude_1):
         super().__init__()
-        self.circle = Circle().scale(0.5)
-        self.content = content
-        self.add(self.circle, content)
-        content.move_to(self.circle.get_center())
+        magnitude_0 = np.sqrt(1 - magnitude_1 * magnitude_1)
+        arrow = Vector([magnitude_0/2, magnitude_1/2, 0])
+        zero = Text("|0>").scale(0.5)
+        one = Text("|1>").scale(0.5)
+        # myTemplate = TexTemplate()
+        # myTemplate.add_to_preamble(r"\usepackage{mathtools}")
+        # myTemplate.add_to_preamble(r"\DeclarePairedDelimiter\bra{\langle}{\rvert}")
+        # one = Tex(r"\ket{1}", tex_template = myTemplate).scale(0.5)
 
-    def clear_content(self):
-        self.remove(self.content)
-        self.content = None
+        self.circle = Circle(0.5)
+        self.arrow = arrow
+        self.add(self.circle, arrow)
+        center = self.circle.get_center()
+        arrow.move_to(center + [magnitude_0/4, magnitude_1/4, 0])
+        self.add(zero.move_to(center + RIGHT * 4/5))
+        self.add(one.move_to(center + LEFT * 4/5))
 
-    @override_animate(clear_content)
-    def _clear_content_animation(self, anim_args=None):
+    def clear_arrow(self):
+        self.remove(self.arrow)
+        self.arrow = None
+
+    @override_animate(clear_arrow)
+    def _clear_arrow_animation(self, anim_args=None):
         if anim_args is None:
             anim_args = {}
-        anim = Uncreate(self.content, **anim_args)
-        self.clear_content()
+        anim = Uncreate(self.arrow, **anim_args)
+        self.clear_arrow()
         return anim
 
 class quantum_bit(Scene):
@@ -161,19 +173,29 @@ class quantum_bit(Scene):
     d1 = Dot([-4, -0.5, 0])
     d2 = Dot([-4, -1, 0])
 
-    arrow = Arrow(d1, d2)
-    grp = VGroup(arrow, d2)
-    circ = CircleWithContent(grp).move_to([-4, 0, 0])
-    self.add(circ)
-    self.play(circ.animate.shift(RIGHT * 2))
-
-    d1_text = Text("0").next_to(d1, UP).scale(0.7)
-    d2_text = Text("1").next_to(d2, UP).scale(0.7)
+    q1 = QubitReal(0.5).move_to([-4, 0, 0])
+    q1 += d2
+    self.add(q1)
+    self.play(q1.animate.shift(RIGHT * 8))
+    
+    magnitude_1 = 0
+    magnitude_0 = np.sqrt(1 - magnitude_1 * magnitude_1)
+    arrow = Vector([magnitude_0, magnitude_1, 0])
+    zero = Text("|0>").scale(0.5)
+    one = Text("|1>").scale(0.5)
+    circle = Circle()
+    self.arrow = arrow
+    self.add(circle, arrow)
+    arrow.move_to(circle.get_center())
+    zero.move_to(circle.get_center())
+    one.move_to(circle.get_center() +  [-0.3, 0, 0])
+    self.add(zero, one)
+    self.wait()
     # d1_qubit = Arrow(DOWN, UP).next_to(d1, UP).scale(0.3)
     # d2_qubit = Arrow(UP, DOWN).next_to(d2, UP).scale(0.3)
-    self.play(Write(d1), Write(d2), Write(d1_text), Write(d2_text))
-    self.play(Transform(d2_text, arrow))
-    self.wait()
+    # self.play(Write(d1), Write(d2), Write(d1_text), Write(d2_text))
+    # self.play(Transform(d2_text, arrow))
+    # self.wait()
     # self.play(Transform(d1_text, d1_qubit), Transform(d2_text, d2_qubit))
 
     # grp1 = VGroup(d1, d1_text)
