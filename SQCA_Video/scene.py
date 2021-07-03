@@ -94,36 +94,6 @@ class classical_circuit(Scene):
     self.play(t1.animate.set_value(line1.get_end()[0]), t2.animate.set_value(line2.get_end()[0]), time_tracker.animate.set_value(time2),rate_func=linear,run_time=2.0)
  
 
-    # dot1 = Dot([-4, 0, 0])
-    # dot2 = Dot([-4, -1, 0])
-    # bit_group1 = VGroup()
-    # bit_group1.add(*Dot([-4, 0, 0]))
-    # bit_group2 = VGroup().add(*Dot([-4, -1, 0]))
-
-
-    # bit_group1.add(*Text("0").next_to(dot, UP).scale(0.7))
-    # bit_group2.add(*Text("1").next_to(dot2, UP).scale(0.7))
-    # self.play(Write(bit_group1))
-    # self.play(Write(bit_group2))
-    # self.wait(1)
-    # d1_text = Text("0").next_to(dot, UP).scale(0.7)
-    # d2_text = Text("1").next_to(dot2, UP).scale(0.7)
-
-    # time = 0.0
-    # line1 = Line([-4, 0, 0], [4, 0, 0])
-    # line2 = Line([-4, -1, 0], [4, -1, 0])
-    # on_screen_time = Variable(time, Text("t"), num_decimal_places=2).shift(UP)
-    # self.play(Write(line1), Write(line2))
-    # self.wait(1)
-    # self.play(Write(on_screen_time))
-
-    # t2 = 2.0
-    # time_tracker = on_screen_time.tracker
-    # self.wait(2)
-
-    # self.play(MoveAlongPath(bit_group1, line1), MoveAlongPath(bit_group2, line2), Transform(d1_text, d1_text_moved), Transform(d2_text, d2_text_moved), time_tracker.animate.set_value(t2), run_time=2, rate_func=linear)
-    # self.wait()
-
 class wire_classical(Scene):
   def construct(self):
 
@@ -165,30 +135,53 @@ def bit(dot, n1, n2):
   grp.add(Arrow(n1, n2))
   return grp
 
+class CircleWithContent(VGroup):
+    def __init__(self, content):
+        super().__init__()
+        self.circle = Circle().scale(0.5)
+        self.content = content
+        self.add(self.circle, content)
+        content.move_to(self.circle.get_center())
+
+    def clear_content(self):
+        self.remove(self.content)
+        self.content = None
+
+    @override_animate(clear_content)
+    def _clear_content_animation(self, anim_args=None):
+        if anim_args is None:
+            anim_args = {}
+        anim = Uncreate(self.content, **anim_args)
+        self.clear_content()
+        return anim
+
 class quantum_bit(Scene):
   def construct(self):
 
-    d1 = Dot([-4, 0, 0])
+    d1 = Dot([-4, -0.5, 0])
     d2 = Dot([-4, -1, 0])
 
-
-
     arrow = Arrow(d1, d2)
-    self.play(Write(arrow))
+    grp = VGroup(arrow, d2)
+    circ = CircleWithContent(grp).move_to([-4, 0, 0])
+    self.add(circ)
+    self.play(circ.animate.shift(RIGHT * 2))
 
     d1_text = Text("0").next_to(d1, UP).scale(0.7)
     d2_text = Text("1").next_to(d2, UP).scale(0.7)
-    d1_qubit = Arrow(DOWN, UP).next_to(d1, UP).scale(0.3)
-    d2_qubit = Arrow(UP, DOWN).next_to(d2, UP).scale(0.3)
+    # d1_qubit = Arrow(DOWN, UP).next_to(d1, UP).scale(0.3)
+    # d2_qubit = Arrow(UP, DOWN).next_to(d2, UP).scale(0.3)
     self.play(Write(d1), Write(d2), Write(d1_text), Write(d2_text))
-    self.play(Transform(d1_text, d1_qubit), Transform(d2_text, d2_qubit))
+    self.play(Transform(d2_text, arrow))
+    self.wait()
+    # self.play(Transform(d1_text, d1_qubit), Transform(d2_text, d2_qubit))
 
-    grp1 = VGroup(d1, d1_text)
-    grp1.add(*dot)
-    crc = Circle()
-    d1 = Dot(n1)
-    d2 = Dot(n2)
-    grp.add(Arrow(n1, n2))
+    # grp1 = VGroup(d1, d1_text)
+    # grp1.add(*dot)
+    # crc = Circle()
+    # d1 = Dot(n1)
+    # d2 = Dot(n2)
+    # grp.add(Arrow(n1, n2))
 
 
 
