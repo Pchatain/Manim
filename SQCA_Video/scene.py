@@ -106,7 +106,7 @@ class wire_classical(Scene):
 
 
 class QubitReal(VGroup):
-    def __init__(self, magnitude_1):
+    def __init__(self, magnitude_1, loc):
         super().__init__()
         self.magnitude_0 = np.sqrt(1 - magnitude_1 * magnitude_1)
         self.magnitude_1 = magnitude_1
@@ -120,7 +120,7 @@ class QubitReal(VGroup):
         # myTemplate.add_to_preamble(r"\DeclarePairedDelimiter\bra{\langle}{\rvert}")
         # one = Tex(r"\ket{1}", tex_template = myTemplate).scale(0.5)
 
-        self.circle = Circle(0.5)
+        self.circle = Circle(0.5).move_to(loc + UP * 3/4)
         self.add(self.circle, arrow)
         center = self.circle.get_center()
         arrow.move_to(center + RIGHT/4)
@@ -128,6 +128,8 @@ class QubitReal(VGroup):
         self.arrow = arrow
         self.add(zero.move_to(center + RIGHT * 4/5))
         self.add(one.move_to(center + LEFT * 4/5))
+        dot = Dot(center + DOWN * 3/4)
+        self.add(dot)
 
     def update_qubit(self, magnitude_1):
         arrow_points = self.arrow.get_points()
@@ -191,16 +193,13 @@ class Cnot(VGroup):
 class quantum_bit(Scene):
   def construct(self):
 
-    d1 = Dot([-4, 0, 0])
-    d2 = Dot([-4, -1, 0])
-
-    q1 = QubitReal(0).move_to([-4, 1, 0])
-    q1 += d1
-    q_new = QubitReal(1).move_to([-4, 1, 0])
-    self.add(q1)
-    self.play(Transform(q1 - d1, q_new))
+    # Depricated
+    # q1 = QubitReal(0, [-4, 1, 0])
+    # q_new = QubitReal(1).move_to([-4, 1, 0])
+    # self.add(q1)
+    # self.play(Transform(q1 - d1, q_new))
     
-    self.wait()
+    # self.wait()
 
 
 class hadamard_0(Scene):
@@ -213,14 +212,8 @@ class hadamard_0(Scene):
     self.add_foreground_mobjects(h_gate)
     self.wait()
 
-    d1 = Dot([-4, 0, 0])
-    d2 = Dot([-4, -2, 0])
-    q1_loc = [-4, 0.75, 0]
-    q2_loc = [-4, -1.25, 0]
-    q1 = QubitReal(0).move_to(q1_loc)
-    q1 += d1
-    q2 = QubitReal(1).move_to(q2_loc)
-    q2 += d2
+    q1 = QubitReal(0, [-4, 0, 0])
+    q2 = QubitReal(0, [-4, -2, 0])
 
     self.play(Write(line1), Write(line2), h_gate.animate.move_to([-2,0,0]))
     self.play(Write(q1), Write(q2))
@@ -316,8 +309,10 @@ class cnot_scene(Scene):
     self.play(Write(line1), Write(line2))
     c_not = Cnot(UP, [0, -2, 0])
     h_gate = Hgate().move_to([-2, 0, 0])
-    self.add_foreground_mobjects(c_not, h_gate)
-    self.play(Write(c_not), Write(h_gate))
+    m_gate = VGroup(Mgate().move_to([3, 0, 0]), Mgate().move_to([3, -2, 0]))
+
+    self.add_foreground_mobjects(c_not, h_gate, m_gate)
+    self.play(Write(c_not), Write(h_gate), Write(m_gate))
 
 class image_test(Scene):
   def construct(self):
