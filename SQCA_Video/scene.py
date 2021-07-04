@@ -136,6 +136,10 @@ class QubitReal(VGroup):
         arrow_points = self.arrow.get_points()
         anim = Rotate(self.arrow, angle=180 * DEGREES, about_point=arrow_points[0], axis=([1, 1, 0]))
         return anim
+    def measure(self):
+        points = self.arrow.get_points()
+        vec = points[-1] - points[0]
+        return (np.abs(vec[0]), np.abs(vec[1]))
 
     def clear_arrow(self):
         self.remove(self.arrow)
@@ -148,6 +152,14 @@ class QubitReal(VGroup):
         anim = Uncreate(self.arrow, **anim_args)
         self.clear_arrow()
         return anim
+
+class Hgate(VGroup):
+  def __init__(self):
+    super().__init__()
+    outline = Square(1).set_fill(BLACK, opacity=1.0)
+    label = Text("H").scale(1.5).move_to(outline.get_center())
+    self.add(outline) 
+    self.add(label)
 
 class quantum_bit(Scene):
   def construct(self):
@@ -163,14 +175,14 @@ class quantum_bit(Scene):
     
     self.wait()
 
+
+
 class hadamard(Scene):
   def construct(self):
     line1 = Line([-4, 0, 0], [4, 0, 0])
     line2 = Line([-4, -2, 0], [4, -2, 0])
-    # self.add(line1, line2)
-    outline = Square(1).set_fill(BLACK, opacity=1.0)
-    label = Text("H").scale(1.5).move_to(outline.get_center())
-    h_gate = VGroup(outline, label).move_to([0,1,0])
+
+    h_gate = Hgate().move_to([0,1,0])
     self.play(Write(h_gate))
     self.add_foreground_mobjects(h_gate)
     self.wait()
