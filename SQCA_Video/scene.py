@@ -1,5 +1,6 @@
 from typing import Text, get_origin
 from manim import *
+import numpy as np
 
 # TODO: define quanta in a class
 
@@ -107,22 +108,34 @@ class wire_classical(Scene):
 class QubitReal(VGroup):
     def __init__(self, magnitude_1):
         super().__init__()
-        magnitude_0 = np.sqrt(1 - magnitude_1 * magnitude_1)
-        arrow = Vector([magnitude_0/2, magnitude_1/2, 0])
-        zero = Text("|0>").scale(0.5)
-        one = Text("|1>").scale(0.5)
+        # magnitude_0 = np.sqrt(1 - magnitude_1 * magnitude_1)
+        arrow = Vector([1/2, 0, 0])
+        arrow_points = arrow.get_points()
+
+        zero = Text("0").scale(0.5)
+        one = Text("1").scale(0.5)
         # myTemplate = TexTemplate()
         # myTemplate.add_to_preamble(r"\usepackage{mathtools}")
         # myTemplate.add_to_preamble(r"\DeclarePairedDelimiter\bra{\langle}{\rvert}")
         # one = Tex(r"\ket{1}", tex_template = myTemplate).scale(0.5)
 
         self.circle = Circle(0.5)
-        self.arrow = arrow
         self.add(self.circle, arrow)
         center = self.circle.get_center()
-        arrow.move_to(center + [magnitude_0/4, magnitude_1/4, 0])
+        arrow.move_to(center + RIGHT/4)
+        arrow.rotate(angle=magnitude_1 * np.pi, about_point=arrow_points[0])
+        self.arrow = arrow
         self.add(zero.move_to(center + RIGHT * 4/5))
         self.add(one.move_to(center + LEFT * 4/5))
+
+    def update_qubit(self, magnitude_1):
+        arrow_points = self.arrow.get_points()
+        anim = Rotate(self.arrow, angle=magnitude_1 * np.pi, about_point=arrow_points[0])
+        return anim
+    def hadamard_gate(self):
+        arrow_points = self.arrow.get_points()
+        anim = Rotate(self.arrow, angle=180 * DEGREES, about_point=arrow_points[0], axis=([1, 1, 0]))
+        return anim
 
     def clear_arrow(self):
         self.remove(self.arrow)
@@ -176,15 +189,17 @@ class hadamard(Scene):
     self.wait(1)
 
     self.play(q2.animate.shift(RIGHT * 2), q1.animate.shift(RIGHT * 2))
-    self.wait(1)
-    q1_new = QubitReal(0.5).move_to(q1_loc + RIGHT * 2) + d1
+    # q1_new = QubitReal(0.5).move_to(q1_loc + RIGHT * 2) + d1
 
-    self.play(Transform(q1, q1_new), run_time=0.5)
+    self.play(q1.hadamard_gate(), run_time=0.5)
+    self.play(q1.hadamard_gate(), run_time=0.5)
 
     self.play(q1.animate.shift(RIGHT * 6), q2.animate.shift(RIGHT * 6))
 
     self.wait(2)
     self.wait()
+
+
 
 class image_test(Scene):
   def construct(self):
