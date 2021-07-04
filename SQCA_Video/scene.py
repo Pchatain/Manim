@@ -217,9 +217,10 @@ class hadamard(Scene):
 
     self.play(q2.animate.shift(RIGHT * 2), q1.animate.shift(RIGHT * 2))
     # q1_new = QubitReal(0.5).move_to(q1_loc + RIGHT * 2) + d1
-
-    self.play(q1.hadamard_gate(), run_time=0.5)
-    self.play(q1.hadamard_gate(), run_time=0.5)
+    reflection_line = Line([-2.35, 0.4, 0], [-1.65, 1.1, 0], color=YELLOW)
+    self.play(FadeIn(reflection_line))
+    self.play(q1.hadamard_gate())
+    self.play(FadeOut(reflection_line))
 
     self.play(q1.animate.shift(RIGHT * 6), q2.animate.shift(RIGHT * 6))
 
