@@ -124,7 +124,7 @@ class QubitReal(VGroup):
         self.add(self.circle, arrow)
         center = self.circle.get_center()
         arrow.move_to(center + RIGHT/4)
-        arrow.rotate(angle=magnitude_1 * np.pi, about_point=arrow_points[0])
+        arrow.rotate(angle=magnitude_1 * np.pi, about_point=center)
         self.arrow = arrow
         self.add(zero.move_to(center + RIGHT * 4/5))
         self.add(one.move_to(center + LEFT * 4/5))
@@ -199,7 +199,7 @@ class quantum_bit(Scene):
     # self.add(q1)
     # self.play(Transform(q1 - d1, q_new))
     
-    # self.wait()
+    self.wait()
 
 
 class hadamard_0(Scene):
@@ -213,7 +213,7 @@ class hadamard_0(Scene):
     self.wait()
 
     q1 = QubitReal(0, [-4, 0, 0])
-    q2 = QubitReal(0, [-4, -2, 0])
+    q2 = QubitReal(1, [-4, -2, 0])
 
     self.play(Write(line1), Write(line2), h_gate.animate.move_to([-2,0,0]))
     self.play(Write(q1), Write(q2))
@@ -241,14 +241,10 @@ class hadamard_1(Scene):
     self.add_foreground_mobjects(h_gate)
     self.wait()
 
-    d1 = Dot([-4, 0, 0])
-    d2 = Dot([-4, -2, 0])
     q1_loc = [-4, 0.75, 0]
     q2_loc = [-4, -1.25, 0]
-    q1 = QubitReal(0).move_to(q1_loc)
-    q1 += d1
-    q2 = QubitReal(1).move_to(q2_loc)
-    q2 += d2
+    q1 = QubitReal(0, q1_loc)
+    q2 = QubitReal(1, q2_loc)
 
     self.play(Write(line1), Write(line2), h_gate.animate.move_to([-2,-2,0]))
     self.play(Write(q1), Write(q2))
