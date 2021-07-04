@@ -144,9 +144,9 @@ class QubitReal(VGroup):
         self.magnitude_0, self.magnitude_1 = m_total[0], m_total[1]
         # self.arrow.rotate(angle=180 * DEGREES, about_point=arrow_points[0], axis=([1, 1, 0]))
         return anim
-    def measure(self):
+    def measure(self, precision):
         print(f"Values are {(self.magnitude_0, self.magnitude_1)}")
-        return (self.magnitude_0, self.magnitude_1)
+        return np.around((self.magnitude_0, self.magnitude_1), decimals=precision)
 
     def clear_arrow(self):
         self.remove(self.arrow)
@@ -163,19 +163,30 @@ class QubitReal(VGroup):
 class Hgate(VGroup):
   def __init__(self):
     super().__init__()
-    outline = Square(1).set_fill(BLACK, opacity=1.0)
-    label = Text("H").scale(1.5).move_to(outline.get_center())
+    outline = Square(0.5).set_fill(BLACK, opacity=1.0)
+    label = Text("H").scale(0.75).move_to(outline.get_center())
     self.add(outline) 
     self.add(label)
 
 class Mgate(VGroup):
   def __init__(self):
     super().__init__()
-    outline = Square(1).set_fill(BLACK, opacity=1.0)
-    label = Text("M").scale(1.5).move_to(outline.get_center())
+    outline = Square(0.5).set_fill(BLACK, opacity=1.0)
+    label = Text("M").scale(0.75).move_to(outline.get_center())
     self.add(outline) 
     self.add(label)
 
+class Cnot(VGroup):
+  def __init__(self, direction, start):
+    super().__init__()
+    outline = Circle(0.25).set_fill(BLUE, opacity=1.0).move_to(start)
+    label = Text("+", width=1).scale(0.25).move_to(outline.get_center())
+    dot = Dot(outline.get_center() + direction*2)
+    line = Line(outline.get_center(), dot.get_center())
+    self.add(outline)
+    self.add(label)
+    self.add(dot)
+    self.add(line)
 
 class quantum_bit(Scene):
   def construct(self):
@@ -192,7 +203,7 @@ class quantum_bit(Scene):
     self.wait()
 
 
-class hadamard(Scene):
+class hadamard_0(Scene):
   def construct(self):
     line1 = Line([-4, 0, 0], [4, 0, 0])
     line2 = Line([-4, -2, 0], [4, -2, 0])
@@ -227,6 +238,41 @@ class hadamard(Scene):
     self.wait(2)
     self.wait()
 
+class hadamard_1(Scene):
+  def construct(self):
+    line1 = Line([-4, 0, 0], [4, 0, 0])
+    line2 = Line([-4, -2, 0], [4, -2, 0])
+
+    h_gate = Hgate().move_to([0,1,0])
+    self.play(Write(h_gate))
+    self.add_foreground_mobjects(h_gate)
+    self.wait()
+
+    d1 = Dot([-4, 0, 0])
+    d2 = Dot([-4, -2, 0])
+    q1_loc = [-4, 0.75, 0]
+    q2_loc = [-4, -1.25, 0]
+    q1 = QubitReal(0).move_to(q1_loc)
+    q1 += d1
+    q2 = QubitReal(1).move_to(q2_loc)
+    q2 += d2
+
+    self.play(Write(line1), Write(line2), h_gate.animate.move_to([-2,-2,0]))
+    self.play(Write(q1), Write(q2))
+    self.wait(1)
+
+    self.play(q2.animate.shift(RIGHT * 2), q1.animate.shift(RIGHT * 2))
+    # q1_new = QubitReal(0.5).move_to(q1_loc + RIGHT * 2) + d1
+    reflection_line = Line([-2.35, -1.6, 0], [-1.65, -0.9, 0], color=YELLOW)
+    self.play(FadeIn(reflection_line))
+    self.play(q2.hadamard_gate())
+    self.play(FadeOut(reflection_line))
+
+    self.play(q1.animate.shift(RIGHT * 6), q2.animate.shift(RIGHT * 6))
+
+    self.wait(2)
+    self.wait()
+
 
 class measure_scene(Scene):
   def construct(self):
@@ -244,8 +290,8 @@ class measure_scene(Scene):
     q2 += d2
     self.add_foreground_mobjects(h_gate)
     self.play(Write(line1), Write(line2), Write(h_gate))
-    q1.measure()
-    q2.measure()
+    q1.measure(5)
+    q2.measure(5)
     self.play(Write(q1), Write(q2))
     self.wait(1)
 
@@ -257,11 +303,21 @@ class measure_scene(Scene):
     self.play(Write(m_gate))
     self.wait(1)
     self.play(q1.animate.shift(RIGHT * 5), q2.animate.shift(RIGHT * 5))
-    value1, value2 = q1.measure()
-    text1 = Text(str(value1)).move_to([5, -1, 0]) # TODO: change to 2 decimal places
-    text2 = Text(str(value2)).move_to([5, 1, 0])
-    self.play(Write(text1), Write(text2))
+    value1, value2 = q1.measure(3)
+    text1 = Text(str(value1)).move_to(q1.get_center() + [1, 0, 0]).scale(0.5) # TODO: change to 2 decimal places
+    text2 = Text(str(value2)).move_to(q1.get_center() + [2, 0, 0]).scale(0.5)
+    self.play(Transform(q1, VGroup(text1, text2)))
     self.wait()
+
+class cnot_scene(Scene):
+  def construct(self):
+    line1 = Line([-4, 0, 0], [3, 0, 0])
+    line2 = Line([-4, -2, 0], [3, -2, 0])
+    self.play(Write(line1), Write(line2))
+    c_not = Cnot(UP, [0, -2, 0])
+    h_gate = Hgate().move_to([-2, 0, 0])
+    self.add_foreground_mobjects(c_not, h_gate)
+    self.play(Write(c_not), Write(h_gate))
 
 class image_test(Scene):
   def construct(self):
