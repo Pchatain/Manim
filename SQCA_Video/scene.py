@@ -108,7 +108,8 @@ class wire_classical(Scene):
 class QubitReal(VGroup):
     def __init__(self, magnitude_1):
         super().__init__()
-        # magnitude_0 = np.sqrt(1 - magnitude_1 * magnitude_1)
+        self.magnitude_0 = np.sqrt(1 - magnitude_1 * magnitude_1)
+        self.magnitude_1 = magnitude_1
         arrow = Vector([1/2, 0, 0])
         arrow_points = arrow.get_points()
 
@@ -131,15 +132,21 @@ class QubitReal(VGroup):
     def update_qubit(self, magnitude_1):
         arrow_points = self.arrow.get_points()
         anim = Rotate(self.arrow, angle=magnitude_1 * np.pi, about_point=arrow_points[0])
+        self.magnitude_0 = np.sqrt(1 - magnitude_1 * magnitude_1)
+        self.magnitude_1 = magnitude_1
         return anim
     def hadamard_gate(self):
         arrow_points = self.arrow.get_points()
         anim = Rotate(self.arrow, angle=180 * DEGREES, about_point=arrow_points[0], axis=([1, 1, 0]))
+        m0 = self.magnitude_0 * np.array([1/np.sqrt(2), 1/np.sqrt(2)])
+        m1 = self.magnitude_1 * np.array([1/np.sqrt(2), -1/np.sqrt(2)])
+        m_total = m0 + m1
+        self.magnitude_0, self.magnitude_1 = m_total[0], m_total[1]
+        # self.arrow.rotate(angle=180 * DEGREES, about_point=arrow_points[0], axis=([1, 1, 0]))
         return anim
     def measure(self):
-        points = self.arrow.get_points()
-        vec = points[-1] - points[0]
-        return (np.abs(vec[0]), np.abs(vec[1]))
+        print(f"Values are {(self.magnitude_0, self.magnitude_1)}")
+        return (self.magnitude_0, self.magnitude_1)
 
     def clear_arrow(self):
         self.remove(self.arrow)
@@ -161,6 +168,15 @@ class Hgate(VGroup):
     self.add(outline) 
     self.add(label)
 
+class Mgate(VGroup):
+  def __init__(self):
+    super().__init__()
+    outline = Square(1).set_fill(BLACK, opacity=1.0)
+    label = Text("M").scale(1.5).move_to(outline.get_center())
+    self.add(outline) 
+    self.add(label)
+
+
 class quantum_bit(Scene):
   def construct(self):
 
@@ -174,7 +190,6 @@ class quantum_bit(Scene):
     self.play(Transform(q1 - d1, q_new))
     
     self.wait()
-
 
 
 class hadamard(Scene):
@@ -212,6 +227,40 @@ class hadamard(Scene):
     self.wait()
 
 
+class measure_scene(Scene):
+  def construct(self):
+    line1 = Line([-4, 0, 0], [3, 0, 0])
+    line2 = Line([-4, -2, 0], [3, -2, 0])
+
+    h_gate = Hgate().move_to([-2,0,0])
+    d1 = Dot([-4, 0, 0])
+    d2 = Dot([-4, -2, 0])
+    q1_loc = [-4, 0.75, 0]
+    q2_loc = [-4, -1.25, 0]
+    q1 = QubitReal(0).move_to(q1_loc)
+    q1 += d1
+    q2 = QubitReal(1).move_to(q2_loc)
+    q2 += d2
+    self.add_foreground_mobjects(h_gate)
+    self.play(Write(line1), Write(line2), Write(h_gate))
+    q1.measure()
+    q2.measure()
+    self.play(Write(q1), Write(q2))
+    self.wait(1)
+
+    self.play(q2.animate.shift(RIGHT * 2), q1.animate.shift(RIGHT * 2))
+
+    self.play(q1.hadamard_gate(), run_time=0.5)
+    self.wait(2)
+    m_gate = Mgate().move_to([3, 0, 0])
+    self.play(Write(m_gate))
+    self.wait(1)
+    self.play(q1.animate.shift(RIGHT * 5), q2.animate.shift(RIGHT * 5))
+    value1, value2 = q1.measure()
+    text1 = Text(str(value1)).move_to([5, -1, 0]) # TODO: change to 2 decimal places
+    text2 = Text(str(value2)).move_to([5, 1, 0])
+    self.play(Write(text1), Write(text2))
+    self.wait()
 
 class image_test(Scene):
   def construct(self):
