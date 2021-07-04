@@ -111,7 +111,6 @@ class QubitReal(VGroup):
         self.magnitude_0 = np.sqrt(1 - magnitude_1 * magnitude_1)
         self.magnitude_1 = magnitude_1
         arrow = Vector([1/2, 0, 0])
-        arrow_points = arrow.get_points()
 
         zero = Text("0").scale(0.5)
         one = Text("1").scale(0.5)
@@ -131,12 +130,22 @@ class QubitReal(VGroup):
         dot = Dot(center + DOWN * 3/4)
         self.add(dot)
 
+
     def update_qubit(self, magnitude_1):
         arrow_points = self.arrow.get_points()
-        anim = Rotate(self.arrow, angle=magnitude_1 * np.pi, about_point=arrow_points[0])
-        self.magnitude_0 = np.sqrt(1 - magnitude_1 * magnitude_1)
-        self.magnitude_1 = magnitude_1
+        anim = Rotate(self.arrow, angle=magnitude_1 * np.pi, about_point=arrow_points[0], axis=([0, 0, 1]))
+        angle = magnitude_1 * np.pi/2
+        cos = np.cos(angle)
+        sin = np.sin(angle)
+        rotate_matrix = np.array([[cos, sin], [-sin, cos]])
+        rotated = np.matmul(rotate_matrix, np.array([self.magnitude_0, self.magnitude_1]))
+        # print("_________________")
+        # print(f"prev was {np.array([self.magnitude_0, self.magnitude_1])} and now is {rotated}")
+        # print("____________")
+        self.magnitude_0 = rotated[0]
+        self.magnitude_1 = rotated[1]
         return anim
+
     def hadamard_gate(self):
         arrow_points = self.arrow.get_points()
         anim = Rotate(self.arrow, angle=180 * DEGREES, about_point=arrow_points[0], axis=([1, 1, 0]))
@@ -144,11 +153,20 @@ class QubitReal(VGroup):
         m1 = self.magnitude_1 * np.array([1/np.sqrt(2), -1/np.sqrt(2)])
         m_total = m0 + m1
         self.magnitude_0, self.magnitude_1 = m_total[0], m_total[1]
-        # self.arrow.rotate(angle=180 * DEGREES, about_point=arrow_points[0], axis=([1, 1, 0]))
         return anim
-    def measure(self, precision):
-        print(f"Values are {(self.magnitude_0, self.magnitude_1)}")
+
+    def get_values(self, precision):
+        # print(f"Values are {(self.magnitude_0, self.magnitude_1)}")
         return np.around((self.magnitude_0, self.magnitude_1), decimals=precision)
+
+    def measure(self):
+      value1, value2 = self.get_values(5)
+      text1 = Text(str(value1)).move_to(self.get_center() + [1, 0, 0]).scale(0.5) # TODO: change to 2 decimal places
+      text2 = Text(str(value2)).move_to(self.get_center() + [2, 0, 0]).scale(0.5)
+      output = VGroup(text1, text2)
+      chart = BarChart((value1**2, value2**2), bar_names = ["0", "1"]).scale(0.4).move_to(self.get_center() + [2, -0.5, 0])
+      anim = Transform(self, chart)
+      return anim
 
     def clear_arrow(self):
         self.remove(self.arrow)
@@ -201,7 +219,6 @@ class quantum_bit(Scene):
     
     self.wait()
 
-
 class hadamard_0(Scene):
   def construct(self):
     line1 = Line([-4, 0, 0], [4, 0, 0])
@@ -241,8 +258,8 @@ class hadamard_1(Scene):
     self.add_foreground_mobjects(h_gate)
     self.wait()
 
-    q1_loc = [-4, 0.75, 0]
-    q2_loc = [-4, -1.25, 0]
+    q1_loc = [-4, 0, 0]
+    q2_loc = [-4, -2, 0]
     q1 = QubitReal(0, q1_loc)
     q2 = QubitReal(1, q2_loc)
 
@@ -269,18 +286,14 @@ class measure_scene(Scene):
     line2 = Line([-4, -2, 0], [3, -2, 0])
 
     h_gate = Hgate().move_to([-2,0,0])
-    d1 = Dot([-4, 0, 0])
-    d2 = Dot([-4, -2, 0])
-    q1_loc = [-4, 0.75, 0]
-    q2_loc = [-4, -1.25, 0]
-    q1 = QubitReal(0).move_to(q1_loc)
-    q1 += d1
-    q2 = QubitReal(1).move_to(q2_loc)
-    q2 += d2
+    q1_loc = [-4, 0, 0]
+    q2_loc = [-4, -2, 0]
+    q1 = QubitReal(0, q1_loc)
+    q2 = QubitReal(1, q2_loc)
     self.add_foreground_mobjects(h_gate)
     self.play(Write(line1), Write(line2), Write(h_gate))
-    q1.measure(5)
-    q2.measure(5)
+    q1.get_values(5)
+    q2.get_values(5)
     self.play(Write(q1), Write(q2))
     self.wait(1)
 
@@ -288,17 +301,39 @@ class measure_scene(Scene):
 
     self.play(q1.hadamard_gate(), run_time=0.5)
     self.wait(2)
-    m_gate = Mgate().move_to([3, 0, 0])
+    m_gate = VGroup(Mgate().move_to([3, 0, 0]), Mgate().move_to([3, -2, 0]))
     self.play(Write(m_gate))
     self.wait(1)
     self.play(q1.animate.shift(RIGHT * 5), q2.animate.shift(RIGHT * 5))
-    value1, value2 = q1.measure(3)
-    text1 = Text(str(value1)).move_to(q1.get_center() + [1, 0, 0]).scale(0.5) # TODO: change to 2 decimal places
-    text2 = Text(str(value2)).move_to(q1.get_center() + [2, 0, 0]).scale(0.5)
-    self.play(Transform(q1, VGroup(text1, text2)))
+    self.play(q1.measure())
+
+    self.play(q2.measure())
     self.wait()
 
 class cnot_scene(Scene):
+  def construct(self):
+    line1 = Line([-4, 0, 0], [3, 0, 0])
+    line2 = Line([-4, -2, 0], [3, -2, 0])
+    self.play(Write(line1), Write(line2))
+    c_not = Cnot(UP, [0, -2, 0])
+    m_gate = VGroup(Mgate().move_to([3, 0, 0]), Mgate().move_to([3, -2, 0]))
+
+    self.add_foreground_mobjects(c_not, m_gate)
+    self.play(Write(c_not), Write(m_gate))
+    q1 = QubitReal(0, [-4, 0, 0])
+    q2 = QubitReal(1, [-4, -2, 0])
+    self.play(FadeIn(q1, q2))
+    self.play(q1.animate.shift(RIGHT * 4), q2.animate.shift(RIGHT * 4))
+    print(f"values are {q1.get_values(3)}")
+
+    self.play(q1.update_qubit(1))
+    print(f"values are {q1.get_values(3)}")
+    print()
+    self.play(q1.animate.shift(RIGHT * 3), q2.animate.shift(RIGHT * 3))
+
+    self.wait()
+
+class bell_state(Scene):
   def construct(self):
     line1 = Line([-4, 0, 0], [3, 0, 0])
     line2 = Line([-4, -2, 0], [3, -2, 0])
@@ -309,6 +344,23 @@ class cnot_scene(Scene):
 
     self.add_foreground_mobjects(c_not, h_gate, m_gate)
     self.play(Write(c_not), Write(h_gate), Write(m_gate))
+    q1 = QubitReal(0, [-4, 0, 0])
+    q2 = QubitReal(1, [-4, -2, 0])
+    # print(f"values {q2.get_values(3)}")
+    # print()
+    self.play(FadeIn(q1, q2))
+    self.play(q1.animate.shift(RIGHT * 2), q2.animate.shift(RIGHT * 2))
+    self.play(q1.hadamard_gate())
+    self.play(q1.animate.shift(RIGHT * 2), q2.animate.shift(RIGHT * 2))
+    self.play(q2.update_qubit(-1/2))
+    # print(f"Values now {q2.get_values(3)}")
+    # print()
+    self.play(q1.animate.shift(RIGHT * 3), q2.animate.shift(RIGHT * 3))
+    self.play(q1.measure(), q2.measure())
+    self.wait(1)
+    chart = BarChart((1/2, 1/2), bar_names = ["00", "11"]).scale(0.7).move_to([4, -1, 0])
+    self.play(VGroup(q1, q2, line1, line2, h_gate, c_not, m_gate).animate.shift(LEFT * 2))
+    self.play(Transform((q1 + q2), chart))
 
 class image_test(Scene):
   def construct(self):
