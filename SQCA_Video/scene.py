@@ -4,23 +4,30 @@ import numpy as np
 
 # TODO: define quanta in a class
 
+WIRE1_START = [-4, 0, 0]
+WIRE1_END = [3, 0, 0]
+WIRE2_START = [-4, -2, 0]
+WIRE2_END = [3, -2, 0]
+
 class prereq(Scene):
   def construct(self):
     knowledge = Text("Prerequisite Knowledge").shift(UP).shift(LEFT)
     self.play(Write(knowledge))
+    self.wait(1)
     list_of_content = MathTex(
             r'&\text{1.  Linear algebra}\\',
             r'&\text{2.  Basic circuits computer science}\\',
-            r'&\text{3.  Complex numbers}',
+            r'&\text{3.  Complex numbers}\\',
+            r'&\text{4.  Superposition}'
         ).shift(DOWN)
     self.play(Write(list_of_content))
+    self.wait(1)
     # knowledge = Text("Prerequisite Knowledge").shift(UP).shift(LEFT)
     # self.play(Write(knowledge))
     # p1 = Text("1.  Basic Linear algebra").scale(0.5).shift(LEFT)
     # self.play(Write(p1))
     # p2 = Text("2.  Basic circuit computer science").scale(0.5).shift(DOWN)
     # self.play(Write(p2))
-
 
 
 class helpTest(Scene):
@@ -46,11 +53,11 @@ class helpTest(Scene):
 class classical_circuit(Scene):
   def construct(self):
 
-    dot1 = Dot([-4, 0, 0])
-    dot2 = Dot([-4, -1, 0])
+    dot1 = Dot(WIRE1_START)
+    dot2 = Dot(WIRE2_START)
     
-    line1 = Line([-4, 0, 0], [4, 0, 0])
-    line2 = Line([-4, -1, 0], [4, -1, 0])
+    line1 = Line(WIRE1_START, WIRE1_END + RIGHT)
+    line2 = Line(WIRE2_START, WIRE2_END + RIGHT)
     dot1.move_to(line1.get_start())
     dot2.move_to(line2.get_start())
     text1=Tex("0").next_to(dot1, UP).scale(0.7)
@@ -59,7 +66,58 @@ class classical_circuit(Scene):
     bit_group1 = VGroup(dot1, text1)
     bit_group2 = VGroup(dot2, text2)
     self.play(Create(line1), Create(line2))
+    self.wait(1)
     self.play(Write(bit_group1), Write(bit_group2))
+    self.wait(1)
+    self.play(bit_group1.animate.shift(RIGHT* 8), bit_group2.animate.shift(RIGHT* 8), run_time = 2,  rate_func=linear)
+    self.wait(1)
+ 
+
+class wire_classical_2(Scene):
+  def construct(self):    
+    dot1 = Dot([0, 0, 0])
+    dot2 = Dot([0, -2, 0])
+    
+    line1 = Line([-8, 0, 0], [0,0,0])
+    line2 = Line([-8, -2, 0], [0, -2, 0])
+    text1=Tex("0").next_to(dot1, UP).scale(0.7)
+    text2=Tex("1").next_to(dot2, UP).scale(0.7)
+
+    bit_group1 = VGroup(dot1, text1)
+    bit_group2 = VGroup(dot2, text2)
+    self.play(Create(line1), Create(line2))
+    self.wait(1)
+    self.play(Write(bit_group1), Write(bit_group2))
+    self.wait(1)
+
+    time = 0.0
+    on_screen_time = Variable(time, Text("t"), num_decimal_places=2).shift(UP)
+    self.play(Write(on_screen_time))
+    time_tracker = on_screen_time.tracker
+    time2 = 2.0
+    self.wait(1)
+    self.play(,rate_func=linear,run_time=2.0)
+    self.wait(1)
+
+
+class wire_classical(Scene):
+  def construct(self):    
+    dot1 = Dot(WIRE1_START)
+    dot2 = Dot(WIRE2_START)
+    
+    line1 = Line(WIRE1_START, WIRE1_END)
+    line2 = Line(WIRE2_START, WIRE2_END)
+    dot1.move_to(line1.get_start())
+    dot2.move_to(line2.get_start())
+    text1=Tex("0").next_to(dot1, UP).scale(0.7)
+    text2=Tex("1").next_to(dot2, UP).scale(0.7)
+
+    bit_group1 = VGroup(dot1, text1)
+    bit_group2 = VGroup(dot2, text2)
+    self.play(Create(line1), Create(line2))
+    self.wait(1)
+    self.play(Write(bit_group1), Write(bit_group2))
+    self.wait(1)
 
     t1 = ValueTracker(line1.get_start()[0])
     t2 = ValueTracker(line2.get_start()[0])
@@ -70,39 +128,9 @@ class classical_circuit(Scene):
     time2 = 2.0
     bit_group1.add_updater(lambda x: x.set_x(t1.get_value()))
     bit_group2.add_updater(lambda x: x.set_x(t2.get_value()))
-
+    self.wait(1)
     self.play(t1.animate.set_value(line1.get_end()[0]), t2.animate.set_value(line2.get_end()[0]), time_tracker.animate.set_value(time2),rate_func=linear,run_time=2.0)
- 
-
-class wire_classical(Scene):
-  def construct(self):    
-    d1 = Dot([-4, 0, 0])
-    d2 = Dot([-4, -1, 0])
-    d1_moved = Dot([4, 0, 0])
-    d2_moved = Dot([4, -1, 0])
-
-    d1_text = Text("0").next_to(d1, UP).scale(0.7)
-    d2_text = Text("1").next_to(d2, UP).scale(0.7)
-    d1_text_moved = Text("0").next_to(d1_moved, UP).scale(0.7)
-    d2_text_moved = Text("1").next_to(d2_moved, UP).scale(0.7)
-    # In classical, everyday bits, they can either be a 0, or a 1. 
-    self.play(Write(d1), Write(d2), Write(d1_text), Write(d2_text))
     self.wait(1)
-
-    time = 0.0
-    line1 = Line([-4, 0, 0], [4, 0, 0])
-    line2 = Line([-4, -1, 0], [4, -1, 0])
-    on_screen_time = Variable(time, Text("t"), num_decimal_places=2).shift(UP)
-    self.play(Write(line1), Write(line2))
-    self.wait(1)
-    self.play(Write(on_screen_time))
-
-    t2 = 2.0
-    time_tracker = on_screen_time.tracker
-    self.wait(2)
-
-    self.play(MoveAlongPath(d1, line1), MoveAlongPath(d2, line2), Transform(d1_text, d1_text_moved), Transform(d2_text, d2_text_moved), time_tracker.animate.set_value(t2), run_time=2, rate_func=linear)
-    self.wait()
 
 
 class QubitReal(VGroup):
@@ -139,9 +167,7 @@ class QubitReal(VGroup):
         sin = np.sin(angle)
         rotate_matrix = np.array([[cos, sin], [-sin, cos]])
         rotated = np.matmul(rotate_matrix, np.array([self.magnitude_0, self.magnitude_1]))
-        # print("_________________")
-        # print(f"prev was {np.array([self.magnitude_0, self.magnitude_1])} and now is {rotated}")
-        # print("____________")
+
         self.magnitude_0 = rotated[0]
         self.magnitude_1 = rotated[1]
         return anim
@@ -279,7 +305,6 @@ class hadamard_1(Scene):
     self.wait(2)
     self.wait()
 
-
 class measure_scene(Scene):
   def construct(self):
     line1 = Line([-4, 0, 0], [3, 0, 0])
@@ -333,7 +358,7 @@ class cnot_scene(Scene):
 
     self.wait()
 
-class bell_state(Scene):
+class bell_state_intro(Scene): # intro scene
   def construct(self):
     line1 = Line([-4, 0, 0], [3, 0, 0])
     line2 = Line([-4, -2, 0], [3, -2, 0])
@@ -345,22 +370,59 @@ class bell_state(Scene):
     self.add_foreground_mobjects(c_not, h_gate, m_gate)
     self.play(Write(c_not), Write(h_gate), Write(m_gate))
     q1 = QubitReal(0, [-4, 0, 0])
-    q2 = QubitReal(1, [-4, -2, 0])
-    # print(f"values {q2.get_values(3)}")
-    # print()
-    self.play(FadeIn(q1, q2))
-    self.play(q1.animate.shift(RIGHT * 2), q2.animate.shift(RIGHT * 2))
-    self.play(q1.hadamard_gate())
-    self.play(q1.animate.shift(RIGHT * 2), q2.animate.shift(RIGHT * 2))
-    self.play(q2.update_qubit(-1/2))
-    # print(f"Values now {q2.get_values(3)}")
-    # print()
-    self.play(q1.animate.shift(RIGHT * 3), q2.animate.shift(RIGHT * 3))
-    self.play(q1.measure(), q2.measure())
-    self.wait(1)
+    q2 = QubitReal(0, [-4, -2, 0])
+    self.wait(5) # 7s
+    self.play(FadeIn(q1, q2)) # 8s
+    self.wait(3) #9s
+    self.play(q1.animate.shift(RIGHT * 2), q2.animate.shift(RIGHT * 2)) # 10s
+    self.play(q1.hadamard_gate(), run_time = 0.75) # 11s
+    self.play(q1.animate.shift(RIGHT * 2), q2.animate.shift(RIGHT * 2)) #12s
+    self.play(q2.update_qubit(1/2), run_time = 0.75) # 13s
+
+    self.play(q1.animate.shift(RIGHT * 3), q2.animate.shift(RIGHT * 3)) # 14s
+    self.play(q1.measure(), q2.measure()) # 15
     chart = BarChart((1/2, 1/2), bar_names = ["00", "11"]).scale(0.7).move_to([4, -1, 0])
+    bell_text = Text("Bell State").move_to([4, 1.5, 0])
     self.play(VGroup(q1, q2, line1, line2, h_gate, c_not, m_gate).animate.shift(LEFT * 2))
     self.play(Transform((q1 + q2), chart))
+    self.wait(3.5) # 23s
+    self.play(Write(bell_text))
+    self.wait(3) # 27
+    framebox1 = SurroundingRectangle(chart[4][0], buff = .1) # x-axis components, first of the components
+    self.play(Create(framebox1)) # 28
+    framebox2 = SurroundingRectangle(chart[4][1], buff = .1) # x-axis components, first of the com
+    self.wait(2)
+    self.play(ReplacementTransform(framebox1, framebox2)) # 31
+    self.wait(3)
+
+class bell_state_quick(Scene): # intro scene
+  def construct(self):
+    line1 = Line([-4, 0, 0], [3, 0, 0])
+    line2 = Line([-4, -2, 0], [3, -2, 0])
+    self.play(Write(line1), Write(line2))
+    c_not = Cnot(UP, [0, -2, 0])
+    h_gate = Hgate().move_to([-2, 0, 0])
+    m_gate = VGroup(Mgate().move_to([3, 0, 0]), Mgate().move_to([3, -2, 0]))
+
+    self.add_foreground_mobjects(c_not, h_gate, m_gate)
+    self.play(Write(c_not), Write(h_gate), Write(m_gate))
+    q1 = QubitReal(0, [-4, 0, 0])
+    q2 = QubitReal(0, [-4, -2, 0])
+    self.play(FadeIn(q1, q2)) 
+    self.play(q1.animate.shift(RIGHT * 2), q2.animate.shift(RIGHT * 2)) 
+    self.play(q1.hadamard_gate(), run_time = 0.75) 
+    self.play(q1.animate.shift(RIGHT * 2), q2.animate.shift(RIGHT * 2)) 
+    self.play(q2.update_qubit(1/2), run_time = 0.75) 
+
+    self.play(q1.animate.shift(RIGHT * 3), q2.animate.shift(RIGHT * 3)) 
+    self.play(q1.measure(), q2.measure()) 
+    chart = BarChart((1/2, 1/2), bar_names = ["00", "11"]).scale(0.7).move_to([4, -1, 0])
+    bell_text = Text("Bell State").move_to([4, 1.5, 0])
+    self.play(VGroup(q1, q2, line1, line2, h_gate, c_not, m_gate).animate.shift(LEFT * 2))
+    self.play(Transform((q1 + q2), chart), FadeIn(bell_text))
+    self.wait(2)
+
+
 
 class image_test(Scene):
   def construct(self):
