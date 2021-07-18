@@ -11,6 +11,15 @@ WIRE2_START = [-4, -2, 0]
 WIRE2_END = [3, -2, 0]
 
 
+class qcIntro(Scene):
+    def construct(self):
+        quantum = Text("Quantum Computing:", color=BLUE).shift(UP).scale(1.5)
+        create = Text("How to entangle two qubits").shift(DOWN)
+        self.play(Write(quantum))
+        self.play(Write(create))
+        self.wait(1)
+
+
 class prereq(Scene):
     def construct(self):
         knowledge = Text("Prerequisite Knowledge").shift(UP).shift(LEFT)
@@ -18,9 +27,9 @@ class prereq(Scene):
         self.wait(1)
         list_of_content = MathTex(
             r"&\text{1.  Linear algebra}\\",
-            r"&\text{2.  Basic circuits computer science}\\",
+            r"&\text{2.  Basic circuits (computer science)}\\",
             r"&\text{3.  Complex numbers}\\",
-            r"&\text{4.  Superposition}",
+            r"&\text{4.  Quantum Superposition}",
         ).shift(DOWN)
         self.play(Write(list_of_content))
         self.wait(1)
@@ -48,6 +57,33 @@ class testingStuff(Scene):
         l1.set_color_by_tex_to_color_map(color_map)
         self.add(l1)
         self.wait()
+        q1 = Mgate().shift(DOWN)
+        self.add(q1)
+        self.wait(0.5)
+        self.play(q1.animate.set_opacity(0.5))
+
+
+class bug(Scene):
+    def construct(self):
+        q1 = QubitReal(0, [0, 0, 0])
+        q1.add_coord()
+        q2 = QubitReal(0, [2, 0, 0])
+        self.add(q1, q2)
+
+        # self.play(q1.update_qubit(1), q1.update_coord())
+        # self.play(q1.update_qubit(1), q1.update_coord())
+        # self.play(q1.update_qubit(1), q1.update_coord())
+        # self.play(q1.update_qubit(1), q1.update_coord())
+        self.play(q1.update_qubit(0.5), q1.update_coord())
+        print(f"Values are {q1.get_values(3)}")
+        self.play(q2.hadamard_gate(), q2.update_coord())
+        print(f"Values are hadamard {q2.get_values(3)}")
+        # self.wait(1)
+        self.play(q1.update_qubit(1), q1.update_coord())
+        print(f"Values are {q1.get_values(3)}")
+        self.play(q1.update_qubit(0.5), q1.update_coord())
+        print(f"Values are {q1.get_values(3)}")
+        self.wait(1)
 
 
 class helpTest(Scene):
@@ -199,29 +235,30 @@ class QubitReal(VGroup):
         self.add(dot)
         self.color_map = {".": BLUE, " ": RED}
 
-    def update_qubit(self, magnitude_1):
+    def rotate_vec(self, m0, m1, ang):
+        angle = ang * np.pi / 2
+        cos = np.cos(angle)
+        sin = np.sin(angle)
+        rotate_matrix = np.array([[cos, -sin], [sin, cos]])
+        rotated = np.matmul(rotate_matrix, np.array([m0, m1]))
+        return rotated
+
+    def update_qubit(self, ang):
         arrow_points = self.arrow.get_points()
         anim = Rotate(
             self.arrow,
-            angle=magnitude_1 * np.pi,
+            angle=ang * np.pi,
             about_point=arrow_points[0],
             axis=([0, 0, 1]),
         )
-        angle = magnitude_1 * np.pi / 2
-        cos = np.cos(angle)
-        sin = np.sin(angle)
-        rotate_matrix = np.array([[cos, sin], [-sin, cos]])
-        rotated = np.matmul(
-            rotate_matrix, np.array([self.magnitude_0, self.magnitude_1])
-        )
+        rotated = self.rotate_vec(self.magnitude_0, self.magnitude_1, ang)
 
-        self.magnitude_0 = rotated[0]
-        self.magnitude_1 = rotated[1]
+        self.magnitude_0, self.magnitude_1 = rotated[0], rotated[1]
 
-        # arrow = self.arrow.copy()
         return anim
 
     def hadamard_gate(self):
+        # In my basis, z coresponds to RIGHT, x coresponds to UP, y coresponds to out of page
         arrow_points = self.arrow.get_points()
         anim = Rotate(
             self.arrow,
@@ -229,6 +266,7 @@ class QubitReal(VGroup):
             about_point=arrow_points[0],
             axis=([1, 1, 0]),
         )
+        # self.update_qubit(2)
         m0 = self.magnitude_0 * np.array([1 / np.sqrt(2), 1 / np.sqrt(2)])
         m1 = self.magnitude_1 * np.array([1 / np.sqrt(2), -1 / np.sqrt(2)])
         m_total = m0 + m1
@@ -243,9 +281,9 @@ class QubitReal(VGroup):
         chart = (
             BarChart((value1 ** 2, value2 ** 2), bar_names=["0", "1"])
             .scale(0.4)
-            .move_to(self.get_center() + [2, 0, 0])
+            .move_to(self.get_center() + [2.3, 0, 0])
         )
-        anim = Transform(self, chart)
+        anim = Transform(self.copy(), chart)
         return anim
 
     def add_coord(self):
@@ -425,22 +463,28 @@ class probability(Scene):
             ReplacementTransform(amplitude_box1, amplitude_box2),
         )
 
-        amplitude = Tex(r"$|1/\sqrt{2}|^2 = $", r"$1/2$").move_to([0, -1.5, 0])
+        amplitude = Tex(r"$|1/\sqrt{2}|^2 = $", r"$1/2$").move_to([-2, -1.5, 0])
+        amplitude2 = amplitude.copy()
+        amplitude2.shift(RIGHT * 4)
         # amplitude2 = Tex(
         #     r"$|i/\sqrt{2}|^2 =i /\sqrt{2} \times (-i/\sqrt{2}) = 1/2$"
         # ).move_to([3, -1.5, 0])
         self.wait(1)
         framebox1 = SurroundingRectangle(amplitude[1])
-        # framebox2 = SurroundingRectangle(amplitude2)
+        framebox2 = SurroundingRectangle(amplitude2[1])
         self.play(Write(amplitude))
         self.wait(0.25)
-        self.play(ReplacementTransform(amplitude_box2, framebox1))
-        # self.wait(1)
-        # self.play(Write(amplitude2), ReplacementTransform(amplitude_box2[1], framebox2))
+        self.play(ReplacementTransform(amplitude_box2[0], framebox1))
+        self.wait(1)
+        self.play(Write(amplitude2), ReplacementTransform(amplitude_box2[1], framebox2))
 
         chart = BarChart((1 / 2, 1 / 2), bar_names=[r"|0\rangle", r"|1\rangle"])
-        self.wait(1)
-        self.play(ReplacementTransform(VGroup(framebox1, amplitude, label2), chart))
+        self.wait(3)
+        self.play(
+            ReplacementTransform(
+                VGroup(framebox1, amplitude, label2, amplitude2, framebox2), chart
+            )
+        )
 
         self.wait(1)
 
@@ -602,6 +646,23 @@ class fourAmplitudes(VGroup):
         self.add(oneone)
 
 
+class twoAmplitudes(VGroup):
+    def __init__(self, zero0, one1):
+        super().__init__()
+        color_map = {"0": BLUE, "1": RED}
+        color_map2 = {r"|": WHITE}
+        HEIGHT = -3
+        zero = Tex(zero0 + r"$|$", r"$0$", r"$\rangle$").move_to([-1.5, HEIGHT, 0])
+        one = Tex(one1 + r"$|$", r"$1$", r"$\rangle$").move_to([1.5, HEIGHT, 0])
+
+        zero.set_color_by_tex_to_color_map(color_map)
+        one.set_color_by_tex_to_color_map(color_map)
+        zero.set_color_by_tex_to_color_map(color_map2)
+        one.set_color_by_tex_to_color_map(color_map2)
+        self.add(zero)
+        self.add(one)
+
+
 class four_amplitudes(Scene):
     def construct(self):
         line1 = Line([-4, 0, 0], [3, 0, 0])
@@ -626,7 +687,7 @@ class four_amplitudes(Scene):
         amps2 = fourAmplitudes(
             r"$\frac{1}{\sqrt{2}}$", r"$0$", r"$\frac{1}{\sqrt{2}}$", r"$0$"
         )
-        self.play(q1.hadamard_gate(), ReplacementTransform(amps1, amps2), run_time=0.5)
+        self.play(q1.hadamard_gate(), ReplacementTransform(amps1, amps2))
         self.wait(1)
         self.play(q1.animate.shift(RIGHT * 5), q2.animate.shift(RIGHT * 5))
         self.wait(1)
@@ -675,13 +736,24 @@ class four_amplitudes2(Scene):
 class cnot_classical(Scene):
     def construct(self):
         # TODO:
+        line1 = Line(WIRE1_START, WIRE1_END + RIGHT)
+        line2 = Line(WIRE2_START, WIRE2_END + RIGHT)
+        c_not = Cnot(UP, [0, -2, 0])
+        grp = VGroup(line1, line2, c_not)
+        self.play(Write(grp))
+        self.wait(1)
+        self.play(FadeOut(grp))
+        self.wait(1)
+
         q1 = QubitReal(0, [0, 0, 0])
         q2 = QubitReal(1, [0, 0, 0])
-        self.play(Write(q1))
+        amps1 = twoAmplitudes(r"$1$", r"$0$")
+        q3 = q1.copy()
+        self.play(Write(q1), Write(amps1))
         self.wait(1)
-        self.play(Transform(q1, q2))
+        self.play(ReplacementTransform(q1, q2), Swap(amps1[0][0], amps1[1][0]))
         self.wait(1)
-        self.play(Transform(q2, q1))
+        self.play(ReplacementTransform(q2, q3), Swap(amps1[0][0], amps1[1][0]))
 
         self.wait(1)
 
@@ -699,17 +771,16 @@ class cnot_scene(Scene):
         q1 = QubitReal(0, [-4, 0, 0])
         q2 = QubitReal(1, [-4, -2, 0])
         self.wait(1)
-        control_box = SurroundingRectangle(c_not[0]).scale(1)
+        control_box = SurroundingRectangle(c_not[2])
         self.play(Create(control_box))
         self.wait(1)
-        target_box = SurroundingRectangle(c_not[2])
+        target_box = SurroundingRectangle(c_not[0])
         self.play(ReplacementTransform(control_box, target_box))
         self.wait(1)
         amps1 = fourAmplitudes(r"$0$", r"$1$", r"$0$", r"$0$")
         self.play(FadeIn(q1, q2), FadeOut(target_box), FadeIn(amps1))
         self.wait(1)
         self.play(q1.animate.shift(RIGHT * 4), q2.animate.shift(RIGHT * 4))
-        # amps2 = fourAmplitudes(r"$0$", r"$0$", r"$0$", r"$1$")
         self.play(q1.update_qubit(1), Swap(amps1[1][0], amps1[3][0]))
         self.wait(1)
         self.play(q1.animate.shift(RIGHT * 3), q2.animate.shift(RIGHT * 3))
@@ -883,35 +954,42 @@ class bell_state_final(Scene):  # intro scene
         m_gate = VGroup(Mgate().move_to([3, 0, 0]), Mgate().move_to([3, -2, 0]))
 
         self.add_foreground_mobjects(c_not, h_gate, m_gate)
-        self.play(Write(c_not), Write(h_gate), Write(m_gate))
+        self.play(Write(c_not), Write(h_gate), Write(m_gate), run_time=2)
         q1 = QubitReal(0, [-4, 0, 0])
         q2 = QubitReal(0, [-4, -2, 0])
         amps1 = fourAmplitudes(r"$1$", r"$0$", r"$0$", r"$0$")
         amps2 = fourAmplitudes(
-            r"$\frac{1}{\sqrt{2}}$", r"$0$", r"$\frac{1}{\sqrt{2}}$", r"$0$"
+            r"$\frac{1}{\sqrt{2}}$", r"$\frac{1}{\sqrt{2}}$", r"$0$", r"$0$"
         )
-        # amps3 = fourAmplitudes(
-        #     r"$\frac{1}{\sqrt{2}}$", r"$0$", r"$0$", r"$\frac{1}{\sqrt{2}}$"
-        # )
         self.wait(1)
         self.play(FadeIn(q1, q2, amps1))
         self.wait(1)
         self.play(q1.animate.shift(RIGHT * 2), q2.animate.shift(RIGHT * 2))
         self.wait(1)
-        self.play(q1.hadamard_gate(), ReplacementTransform(amps1, amps2), run_time=1.25)
+        self.play(q1.hadamard_gate(), run_time=2)
+        self.wait(1)
+        self.play(ReplacementTransform(amps1, amps2))
         self.wait(1)
         self.play(q1.animate.shift(RIGHT * 2), q2.animate.shift(RIGHT * 2))
         self.wait(1)
-        self.play(q2.update_qubit(1 / 2), Swap(amps2[1][0], amps2[3][0]), run_time=1.25)
+        arc = ArcBetweenPoints([4.15, -3, 0], [-1.65, -2.97, 0], angle=np.pi)
+        self.play(
+            q1.update_qubit(1 / 2),
+            run_time=2,
+        )
+        self.wait(1)
+        self.play(
+            amps2[1][0].animate.shift(RIGHT * 5.87), MoveAlongPath(amps2[3][0], arc)
+        )
         self.wait(1)
         self.play(q1.animate.shift(RIGHT * 3), q2.animate.shift(RIGHT * 3))
         self.wait(1)
         self.play(q1.measure(), q2.measure())
         self.wait(1)
         chart = (
-            BarChart((1 / 2, 1 / 2), bar_names=["00", "11"])
+            BarChart((1 / 2, 0, 0, 1 / 2), bar_names=["00", "01", "10", "11"])
             .scale(0.7)
-            .move_to([4, -1, 0])
+            .move_to([-2, -0.5, 0])
         )
         bell_text = Text("Bell State").move_to([0, 1.5, 0])
         # self.play(
@@ -921,6 +999,19 @@ class bell_state_final(Scene):  # intro scene
         self.play(FadeIn(bell_text))
         # self.wait(1)
         # self.play(Transform((q1 + q2), chart), )
+        self.wait(2)
+        self.play(
+            ReplacementTransform(VGroup(line2, line1, h_gate, m_gate, c_not), chart)
+        )
+        self.wait(1)
+
+
+class outro(Scene):
+    def construct(self):
+        goodbye = Text("https://qiskit.org/textbook").move_to([0, 1, 0])
+        self.play(Write(goodbye))
+        image = ImageMobject("qiskit-logo").move_to([0, -2, 0]).scale(0.5)
+        self.play(FadeIn(image))
         self.wait(2)
 
 
