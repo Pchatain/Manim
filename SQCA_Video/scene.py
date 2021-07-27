@@ -291,7 +291,7 @@ class QubitReal(VGroup):
         chart = (
             BarChart((value1 ** 2, value2 ** 2), bar_names=["0", "1"])
             .scale(0.4)
-            .move_to(self.get_center() + [2.3, 0, 0])
+            .move_to(self.get_center() + [2.4, 0, 0])
         )
         anim = Transform(self.copy(), chart)
         return anim
@@ -569,7 +569,7 @@ class hadamard_1(Scene):
         reflection_line = Line([-2.35, -1.6, 0], [-1.65, -0.9, 0], color=YELLOW)
         self.play(FadeIn(reflection_line))
         self.play(q2.hadamard_gate())
-        self.play(FadeOut(reflection_line))
+        self.play(FadeOut(reflection_line), h_gate.use())
 
         self.play(q1.animate.shift(RIGHT * 6), q2.animate.shift(RIGHT * 6))
 
@@ -580,7 +580,7 @@ class hadamard_1(Scene):
 class storage(Scene):
     def construct(self):
         q1 = QubitReal(0, [0, 0, 0])
-        q2 = QubitReal(0, [0, 0, 0])
+        q2 = QubitReal(0.1, [0, 0, 0])
         q1.add_coord()
         q2.add_coord()
         self.play(Write(q1))
@@ -593,7 +593,12 @@ class storage(Scene):
         self.play(q1.update_qubit(1), q1.update_coord())
         self.play(q1.update_qubit(-1.75), q1.update_coord())
         self.play(q1.update_qubit(-0.25), q1.update_coord())
-        self.play(ReplacementTransform(q1, q2))
+
+        text = Tex(r"0.9012345678", r"$|0\rangle$").move_to([0, -2, 0])
+        color_map = {r"|0\rangle": BLUE, r"|1\rangle": RED}
+        text.set_color_by_tex_to_color_map(color_map)
+        self.play(ReplacementTransform(q1, q2), Write(text))
+
         self.wait(1)
 
 
@@ -790,8 +795,8 @@ class cnot_scene(Scene):
 
         self.add_foreground_mobjects(c_not, m_gate)
         self.play(Write(c_not), Write(m_gate))
-        q1 = QubitReal(0, [-4, 0, 0])
-        q2 = QubitReal(1, [-4, -2, 0])
+        q1 = QubitReal(1, [-4, 0, 0])
+        q2 = QubitReal(0, [-4, -2, 0])
         self.wait(1)
         control_box = SurroundingRectangle(c_not[2])
         self.play(Create(control_box))
@@ -799,11 +804,11 @@ class cnot_scene(Scene):
         target_box = SurroundingRectangle(c_not[0])
         self.play(ReplacementTransform(control_box, target_box))
         self.wait(1)
-        amps1 = fourAmplitudes(r"$0$", r"$1$", r"$0$", r"$0$")
+        amps1 = fourAmplitudes(r"$0$", r"$0$", r"$1$", r"$0$")
         self.play(FadeIn(q1, q2), FadeOut(target_box), FadeIn(amps1))
         self.wait(1)
         self.play(q1.animate.shift(RIGHT * 4), q2.animate.shift(RIGHT * 4))
-        self.play(q1.update_qubit(1), Swap(amps1[1][0], amps1[3][0]))
+        self.play(q2.update_qubit(1), Swap(amps1[2][0], amps1[3][0]))
         self.wait(1)
         self.play(q1.animate.shift(RIGHT * 3), q2.animate.shift(RIGHT * 3))
         self.wait(1)
