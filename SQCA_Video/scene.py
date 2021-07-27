@@ -16,6 +16,7 @@ class qcIntro(Scene):
         quantum = Text("Quantum Computing:", color=BLUE).shift(UP).scale(1.5)
         create = Text("How to entangle two qubits").shift(DOWN)
         self.play(Write(quantum))
+        self.wait(1)
         self.play(Write(create))
         self.wait(1)
 
@@ -43,6 +44,12 @@ class prereq(Scene):
 
 class testingStuff(Scene):
     def construct(self):
+        q1 = QubitReal(0, [0, 0, 0])
+        hgate = Cnot(DOWN, [0, 0, 0])
+        line = Line(WIRE1_START, WIRE1_END)
+        self.add_foreground_mobjects(hgate)
+        self.add(q1, hgate, line)
+        self.play(q1.hadamard_gate(), hgate.use())
         # color_map = {r"|0\rangle": BLUE, r"|1\rangle": RED}
         # label = (
         #     Tex(r"$(a + bi)$", r"$|0\rangle$", r"$+ (c + di)$", r"$|1\rangle$")
@@ -50,17 +57,18 @@ class testingStuff(Scene):
         #     .scale(2)
         # )
         # label.set_color_by_tex_to_color_map(color_map)
-        m0 = 0.0
-        m1 = 1.0
-        color_map = {".": BLUE, " ": RED}
-        l1 = Tex(r"(", str(m0) + ",", " " + str(m1), ")")
-        l1.set_color_by_tex_to_color_map(color_map)
-        self.add(l1)
-        self.wait()
-        q1 = Mgate().shift(DOWN)
-        self.add(q1)
-        self.wait(0.5)
-        self.play(q1.animate.set_opacity(0.5))
+
+        # m0 = 0.0
+        # m1 = 1.0
+        # color_map = {".": BLUE, " ": RED}
+        # l1 = Tex(r"(", str(m0) + ",", " " + str(m1), ")")
+        # l1.set_color_by_tex_to_color_map(color_map)
+        # self.add(l1)
+        # self.wait()
+        # q1 = Mgate().shift(DOWN)
+        # self.add(q1)
+        # self.wait(0.5)
+        # self.play(q1.animate.set_opacity(0.5))
 
 
 class bug(Scene):
@@ -123,7 +131,9 @@ class classical_circuit(Scene):
         bit_group2 = VGroup(dot2, text2)
         self.play(Create(line1), Create(line2))
         self.wait(1)
-        self.play(Write(bit_group1), Write(bit_group2))
+        self.play(Write(bit_group1))
+        self.wait(1)
+        self.play(Write(bit_group2))
         self.wait(1)
         self.play(
             bit_group1.animate.shift(RIGHT * 8),
@@ -326,31 +336,40 @@ class Hgate(VGroup):
     def __init__(self):
         super().__init__()
         outline = Square(0.5).set_fill(BLACK, opacity=1.0)
-        label = Text("H").scale(0.75).move_to(outline.get_center())
+        self.label = Text("H").scale(0.75).move_to(outline.get_center())
         self.add(outline)
-        self.add(label)
+        self.add(self.label)
+
+    def use(self):
+        return self.label.animate.set_color(GREY)
 
 
 class Mgate(VGroup):
     def __init__(self):
         super().__init__()
         outline = Square(0.5).set_fill(BLACK, opacity=1.0)
-        label = Text("M").scale(0.75).move_to(outline.get_center())
+        self.label = Text("M").scale(0.75).move_to(outline.get_center())
         self.add(outline)
-        self.add(label)
+        self.add(self.label)
+
+    def use(self):
+        return self.label.animate.set_color(GREY)
 
 
 class Cnot(VGroup):
     def __init__(self, direction, start):
         super().__init__()
-        outline = Circle(0.25).set_fill(BLUE, opacity=1.0).move_to(start)
-        label = Text("+", width=1).scale(0.25).move_to(outline.get_center())
-        dot = Dot(outline.get_center() + direction * 2)
-        line = Line(outline.get_center(), dot.get_center())
-        self.add(outline)
-        self.add(label)
-        self.add(dot)
+        self.outline = Circle(0.25).set_fill(BLUE, opacity=1.0).move_to(start)
+        self.label = Text("+", width=1).scale(0.25).move_to(self.outline.get_center())
+        self.dot = Dot(self.outline.get_center() + direction * 2)
+        line = Line(self.outline.get_center(), self.dot.get_center())
+        self.add(self.outline)
+        self.add(self.label)
+        self.add(self.dot)
         self.add(line)
+
+    def use(self):
+        return VGroup(self.label, self.dot, self.outline).animate.set_color(GREY)
 
 
 class quantum_bit(Scene):
@@ -361,19 +380,19 @@ class quantum_bit(Scene):
         text1 = Tex("1").next_to(dot1, UP).scale(0.7)
         text2 = Tex("0").next_to(dot2, UP).scale(0.7)
 
-        bit_group1 = VGroup(dot1, text1)
-        bit_group2 = VGroup(dot2, text2)
+        bit_group2 = VGroup(dot1, text1)
+        bit_group1 = VGroup(dot2, text2)
         self.add(bit_group1)
         self.wait(1)
         self.play(ReplacementTransform(bit_group1, bit_group2))
         self.wait(1)
         # Depricated
-        q1 = QubitReal(0, [2, 0, 0])
+        q1 = QubitReal(1, [2, 0, 0])
         q1.add_coord()
         question = Text("?", color=YELLOW).move_to([-2, 0.25, 0])
 
         self.play(bit_group2.animate.shift(LEFT * 2), Write(q1))
-        bg1 = VGroup(Dot([-2, 0, 0]), Tex("1").next_to([-2, 0, 0], UP).scale(0.7))
+        bg1 = VGroup(Dot([-2, 0, 0]), Tex("0").next_to([-2, 0, 0], UP).scale(0.7))
         self.wait(1)
         arrow = DoubleArrow([-1.5, 0, 0], [1.5, 0, 0], color=BLUE)
         self.play(Write(arrow))
@@ -412,9 +431,12 @@ class quantum_amplitude(Scene):
             .move_to([0, 1, 0])
             .scale(2)
         )
+        label0 = Tex(r"$|0\rangle$", r"$+$", r"$|1\rangle$").move_to([0, 1, 0]).scale(2)
+        label0.set_color_by_tex_to_color_map(color_map)
         label.set_color_by_tex_to_color_map(color_map)
+        self.play(Write(label0))
         self.wait(1)
-        self.play(Write(label))
+        self.play(ReplacementTransform(label0, label))
         self.wait(1)
         amplitude_box = VGroup(
             SurroundingRectangle(label[0]), SurroundingRectangle(label[3])
@@ -513,9 +535,9 @@ class hadamard_0(Scene):
         self.wait(1)
         self.play(FadeIn(reflection_line))
         self.wait(1)
-        self.play(q1.hadamard_gate())
+        self.play(q1.hadamard_gate(), run_time=2, rate_func=linear)
         self.wait(1)
-        self.play(FadeOut(reflection_line))
+        self.play(FadeOut(reflection_line), h_gate.use())
         self.wait(1)
 
         self.play(q1.animate.shift(RIGHT * 6), q2.animate.shift(RIGHT * 6))
