@@ -1,0 +1,7 @@
+*
+!SQCA_Bell_state1
+!.gitignore
+SQCA_Bell_state1/*
+!*/scene.py
+!.vscode
+!.vscode/manim.code-snippets
